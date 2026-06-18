@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  kokoa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - kokoa-data:/app/data
+    environment:
+      - DATABASE_DIR=/app/data/pglite
+      - NODE_ENV=production
+      - SESSION_PASSWORD=change-me-to-a-secure-password-32-chars-long
+    restart: unless-stopped
+
+volumes:
+  kokoa-data:
