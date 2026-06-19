@@ -4,24 +4,18 @@ ENV NODE_ENV=production
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
-RUN corepack enable && \
-    apk add --no-cache \
-    nss \
-    freetype \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont
+RUN corepack enable
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-RUN pnpm config set ignore-scripts false && pnpm install
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-EXPOSE 3000
-
 RUN pnpm run build
+
+EXPOSE 3000
 
 CMD ["node", ".output/server/index.mjs"]
