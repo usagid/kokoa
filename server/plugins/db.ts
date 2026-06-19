@@ -34,6 +34,15 @@ export default defineNitroPlugin(async (nitroApp) => {
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS tags (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE
+    );
+    CREATE TABLE IF NOT EXISTS post_tags (
+      post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+      tag_id TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+      UNIQUE(post_id, tag_id)
+    );
   `);
   
   try {

@@ -1,5 +1,5 @@
 import { db } from '../../utils/db';
-import { posts, reactions, emoticons, users } from '../../database/schema';
+import { posts, reactions, emoticons, users, tags, postTags } from '../../database/schema';
 import { eq, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
@@ -35,9 +35,17 @@ export default defineEventHandler(async (event) => {
   .innerJoin(emoticons, eq(reactions.emoticonId, emoticons.id))
   .where(eq(reactions.postId, post.id))
   .groupBy(emoticons.id, emoticons.name, emoticons.imageUrl);
+  const postTagsData = await db.select({
+    id: tags.id,
+    name: tags.name
+  })
+  .from(postTags)
+  .innerJoin(tags, eq(postTags.tagId, tags.id))
+  .where(eq(postTags.postId, post.id));
 
   return {
     ...post,
-    reactions: postReactions
+    reactions: postReactions,
+    tags: postTagsData
   };
 });

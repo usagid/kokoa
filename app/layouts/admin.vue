@@ -19,6 +19,7 @@
               <li><NuxtLink to="/dashboard">Overview</NuxtLink></li>
               <li><NuxtLink to="/dashboard/posts">Posts</NuxtLink></li>
               <li><NuxtLink to="/dashboard/emoticons">Emoticons</NuxtLink></li>
+              <li><NuxtLink to="/dashboard/tags">Tags</NuxtLink></li>
               <li><NuxtLink to="/dashboard/users">Users</NuxtLink></li>
               <li><NuxtLink to="/dashboard/settings">Settings</NuxtLink></li>
             </ul>

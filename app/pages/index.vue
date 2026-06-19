@@ -23,7 +23,18 @@
                   </span>
                 </div>
               </template>
-              <div style="font-family: var(--font-mono); margin: 0; padding-top: 10px;" class="post-content" v-html="renderPreview(post.content)"></div>
+              <div v-if="post.tags && post.tags.length > 0" style="margin-top: 4px; display: flex; gap: 5px; flex-wrap: wrap;">
+                <span 
+                  v-for="tag in post.tags" 
+                  :key="tag.id" 
+                  @click.prevent="setTagFilter(tag.id)"
+                  class="kokoa-tag" 
+                  style="background: var(--color-accent); color: var(--text-primary); padding: 2px 8px; font-size: 12px; cursor: pointer;"
+                >
+                  #{{ tag.name }}
+                </span>
+              </div>
+              <KokoaMarkdownRenderer style="font-family: var(--font-mono); margin: 0; padding-top: 10px;" class="post-content" :content="truncateMarkdown(post.content)" />
               <div v-if="isTruncated(post.content)" style="text-align: center; padding-top: 10px; margin-top: 10px; border-top: 1px dashed var(--border-default); color: var(--text-muted); font-size: 12px;">
                 Click to read the full post
               </div>
@@ -35,6 +46,11 @@
       <div v-if="!hasMore && posts.length > 0" style="text-align: center; padding: 20px;">You've reached the end.</div>
       <div v-if="!loading && posts.length === 0" style="text-align: center; padding: 20px;">No posts yet.</div>
     </main>
+    <div v-if="activeTagFilter" style="position: fixed; bottom: 20px; right: 20px; z-index: 100;">
+      <button @click="clearTagFilter" class="kokoa-btn kokoa-btn--accent">
+        Clear Filter ({{ activeTagFilterName }}) ✕
+      </button>
+    </div>
   </div>
 </template>
 
@@ -60,17 +76,6 @@ const isTruncated = (content) => {
   return content.indexOf(' ', 1000) !== -1;
 };
 
-const renderPreview = (content) => {
-  if (!content) return '';
-  let raw = truncateMarkdown(content);
-  raw = raw.replace(/^>(.*)$/gm, '<span class="greentext">>$1</span>');
-  
-  let html = marked.parse(raw);
-  html = html.replace(/<table>/g, '<div class="kokoa-table-wrap" style="margin: 10px 0;"><table class="kokoa-table kokoa-table--striped kokoa-table--bordered">');
-  html = html.replace(/<\/table>/g, '</table></div>');
-  
-  return html;
-};
 
 const formatDate = (dateStr) => {
   const d = new Date(dateStr);
@@ -90,13 +95,24 @@ const page = ref(1);
 const limit = 10;
 const hasMore = ref(true);
 const loading = ref(false);
+const route = useRoute();
+const activeTagFilter = ref(route.query.tagId || null);
+const activeTagFilterName = ref('');
+
+// Watch route query to update filter if navigated directly
+watch(() => route.query.tagId, (newTagId) => {
+  if (newTagId !== activeTagFilter.value) {
+    activeTagFilter.value = newTagId || null;
+    refreshPosts();
+  }
+});
 
 const fetchPosts = async () => {
   if (loading.value || !hasMore.value) return;
   loading.value = true;
   try {
     const data = await $fetch('/api/posts', {
-      query: { page: page.value, limit }
+      query: { page: page.value, limit, tagId: activeTagFilter.value }
     });
     if (data.length < limit) {
       hasMore.value = false;
@@ -111,6 +127,30 @@ const fetchPosts = async () => {
 };
 
 await fetchPosts();
+
+const refreshPosts = async () => {
+  posts.value = [];
+  page.value = 1;
+  hasMore.value = true;
+  await fetchPosts();
+};
+
+const setTagFilter = (tagId) => {
+  const t = posts.value.find(p => p.tags?.some(tag => tag.id === tagId))?.tags.find(tag => tag.id === tagId);
+  activeTagFilterName.value = t?.name || 'Tag';
+  activeTagFilter.value = tagId;
+  const router = useRouter();
+  router.push({ query: { tagId } });
+  refreshPosts();
+};
+
+const clearTagFilter = () => {
+  activeTagFilter.value = null;
+  activeTagFilterName.value = '';
+  const router = useRouter();
+  router.push({ query: {} });
+  refreshPosts();
+};
 
 if (import.meta.client) {
   useInfiniteScroll(

@@ -18,6 +18,14 @@
           <label class="kokoa-label">Content (Markdown)</label>
           <textarea v-model="form.content" rows="10" class="kokoa-textarea" required></textarea>
           <br><br>
+          <label class="kokoa-label">Tags</label>
+          <KokoaTagSelect
+            v-model="form.tags"
+            :options="tagOptions"
+            placeholder="Select tags..."
+            style="margin-bottom: 20px;"
+          />
+          <br>
           <div style="display: flex; gap: 10px;">
             <button type="submit" class="kokoa-btn kokoa-btn--accent">Save</button>
             <button type="button" @click="isCreating = false" class="kokoa-btn">Cancel</button>
@@ -107,7 +115,12 @@ const columns = [
 ];
 
 const isCreating = ref(false);
-const form = ref({ title: '', slug: '', content: '' });
+const form = ref({ title: '', slug: '', content: '', tags: [] });
+
+const { data: tags } = await useFetch('/api/tags');
+const tagOptions = computed(() => {
+  return (tags.value || []).map(t => ({ id: t.id, label: t.name }));
+});
 
 watch(() => form.value.title, (newTitle) => {
   if (isCreating.value) {
@@ -122,7 +135,7 @@ const createPost = async () => {
       body: form.value
     });
     isCreating.value = false;
-    form.value = { title: '', slug: '', content: '' };
+    form.value = { title: '', slug: '', content: '', tags: [] };
     refresh();
   } catch (err) {
     await showAlert(err.message, 'Error');

@@ -12,6 +12,18 @@ export default defineNuxtConfig({
     'reka-ui/nuxt',
   ],
 
+  hooks: {
+    'components:extend'(components) {
+      for (const comp of components) {
+        comp.global = true;
+      }
+    }
+  },
+
+  vue: {
+    runtimeCompiler: true,
+  },
+
   css: [
     '~/assets/css/main.css',
     '~/assets/scss/global.scss',

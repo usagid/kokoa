@@ -1,5 +1,5 @@
 import { db } from '../../utils/db';
-import { posts } from '../../database/schema';
+import { posts, postTags } from '../../database/schema';
 import { eq } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   if (!slug) throw createError({ statusCode: 400, statusMessage: 'Missing slug' });
 
   const body = await readBody(event);
-  const { title, content } = body;
+  const { title, content, tags } = body;
   
   if (!title || !content) {
     throw createError({ statusCode: 400, statusMessage: 'Missing fields' });
@@ -23,6 +23,17 @@ export default defineEventHandler(async (event) => {
 
   if (!updatedPost.length) {
     throw createError({ statusCode: 404, statusMessage: 'Post not found' });
+  }
+
+  // Update tags
+  await db.delete(postTags).where(eq(postTags.postId, updatedPost[0].id));
+  
+  if (tags && Array.isArray(tags) && tags.length > 0) {
+    const postTagValues = tags.map((tagId: string) => ({
+      postId: updatedPost[0].id,
+      tagId
+    }));
+    await db.insert(postTags).values(postTagValues);
   }
 
   return updatedPost[0];

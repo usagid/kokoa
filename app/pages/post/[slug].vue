@@ -19,7 +19,18 @@
           </div>
         </template>
         
-        <div class="kokoa-post-content" v-html="renderedContent" style="font-family: var(--font-mono); line-height: 1.5; white-space: pre-wrap;"></div>
+        <KokoaMarkdownRenderer :content="post.content" class="kokoa-post-content" style="font-family: var(--font-mono); line-height: 1.5; white-space: pre-wrap;" />
+        <div v-if="post.tags && post.tags.length > 0" style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed var(--border-default); display: flex; gap: 5px; flex-wrap: wrap;">
+          <NuxtLink 
+            v-for="tag in post.tags" 
+            :key="tag.id" 
+            :to="`/?tagId=${tag.id}`"
+            class="kokoa-tag" 
+            style="background: var(--color-accent); color: var(--text-primary); padding: 4px 10px; border-radius: 4px; font-size: 13px; text-decoration: none;"
+          >
+            #{{ tag.name }}
+          </NuxtLink>
+        </div>
       </KokoaCard>
 
       <div style="margin-top: 4px; padding-top: 10px;">
@@ -87,24 +98,6 @@ onMounted(() => {
   }
 });
 
-const renderedContent = computed(() => {
-  if (!post.value?.content) return '';
-  
-  const renderer = new marked.Renderer();
-  renderer.blockquote = ({ tokens }) => {
-    const innerHtml = marked.parser(tokens);
-    return `<div class="greentext">${innerHtml}</div>`;
-  };
-  
-  let rawContent = post.value.content;
-  rawContent = rawContent.replace(/^>(.*)$/gm, '<span class="greentext">>$1</span>');
-  
-  let html = marked.parse(rawContent, { renderer });
-  html = html.replace(/<table>/g, '<div class="kokoa-table-wrap" style="margin: 10px 0;"><table class="kokoa-table kokoa-table--striped kokoa-table--bordered">');
-  html = html.replace(/<\/table>/g, '</table></div>');
-  
-  return html;
-});
 
 const getReactionCount = (emoticonId) => {
   if (!post.value?.reactions) return 0;

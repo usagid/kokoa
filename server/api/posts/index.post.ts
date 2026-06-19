@@ -1,5 +1,5 @@
 import { db } from '../../utils/db';
-import { posts, users } from '../../database/schema';
+import { posts, users, postTags } from '../../database/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'node:crypto';
 
@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
-  const { title, slug, content } = body;
+  const { title, slug, content, tags } = body;
   
   if (!title || !slug || !content) {
     throw createError({ statusCode: 400, statusMessage: 'Missing fields' });
@@ -32,6 +32,14 @@ export default defineEventHandler(async (event) => {
     viewsCount: 0,
     authorId: session.data.id as string,
   }).returning();
+
+  if (tags && Array.isArray(tags) && tags.length > 0) {
+    const postTagValues = tags.map((tagId: string) => ({
+      postId: newPost[0].id,
+      tagId
+    }));
+    await db.insert(postTags).values(postTagValues);
+  }
 
   return newPost[0];
 });

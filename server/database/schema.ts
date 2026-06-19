@@ -39,3 +39,17 @@ export const settings = pgTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
 });
+
+export const tags = pgTable('tags', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+});
+
+export const postTags = pgTable('post_tags', {
+  postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  tagId: text('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+}, (table) => {
+  return {
+    pk: unique().on(table.postId, table.tagId),
+  }
+});
