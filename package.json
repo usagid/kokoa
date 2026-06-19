@@ -31,5 +31,14 @@
     "@types/marked": "^6.0.0",
     "drizzle-kit": "^0.31.10",
     "sass": "^1.99.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "sharp",
+      "unrs-resolver",
+      "vue-demi"
+    ]
   }
 }
